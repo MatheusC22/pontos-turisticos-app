@@ -12,6 +12,7 @@ const theme = extendTheme({
             borderRadius: '0',
             borderBottom: '2px solid',
             borderBottomColor: '#A5EBE1',
+            paddingStart: '2',
             _hover: {
               borderBottomColor: '#7FCBC3',
             },
@@ -21,7 +22,14 @@ const theme = extendTheme({
             },
             '::placeholder': {
               color: '#7FCBC3'
-            }
+            },
+            _invalid: {
+              borderBottomColor: 'red',
+              boxShadow: `0`,
+              '::placeholder': {
+                color: 'red'
+              },
+            },  
           }
         }
       }

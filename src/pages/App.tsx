@@ -37,18 +37,19 @@ export const App = () => {
     emailResponsavel: yup.string().required(requiredMessage)
   })
 
-  const { register, handleSubmit, formState: { isValid, errors } } = useForm<FormFields>({
+  const { register, handleSubmit, reset, formState: { isValid, errors, isSubmitting } } = useForm<FormFields>({
     resolver: yupResolver(schemaValidation),
     mode: "all",
   });
 
-  function onSubmit(data: FormFields) {
+  async function onSubmit(data: FormFields) {
+    await new Promise((res) => {
+      setTimeout(() => {
+        res(true);
+      }, 1200)
+    });
     console.log(data);
   }
-
-  useEffect(() => {
-    console.log(errors)
-  }, [errors])
 
   return (
     <ChakraProvider theme={theme}>
@@ -57,40 +58,40 @@ export const App = () => {
           <Heading fontWeight={'900'}>🗽 Pontos Turísticos</Heading>
           <Flex as={'form'} direction={'column'} w={'100%'} px={'70px'} mt={'32px'} gap={'24px'} onSubmit={handleSubmit(onSubmit)}>
             <FormControl isInvalid={errors.nome ? true : false}>
-              <Input placeholder="Nome" {...register("nome")} />
+              <Input placeholder="Nome *" {...register("nome")} />
               <FormErrorMessage>{errors?.nome?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl>
-              <Input placeholder="Descrição" {...register("descricao")} />
+            <FormControl isInvalid={errors.descricao ? true : false}>
+              <Input placeholder="Descrição *" {...register("descricao")} />
               <FormErrorMessage>{errors?.descricao?.message}</FormErrorMessage>
             </FormControl>
             <Flex gap={'48px'}>
-              <FormControl >
-                <Input placeholder="Cidade" {...register("cidade")} />
-                {errors.cidade && <FormErrorMessage>{errors.cidade.message}</FormErrorMessage>}
+              <FormControl isInvalid={errors.cidade ? true : false}>
+                <Input placeholder="Cidade *" {...register("cidade")} />
+                <FormErrorMessage>{errors?.cidade?.message}</FormErrorMessage>
               </FormControl>
-              <FormControl >
-                <Input placeholder="Estado" {...register("estado")} />
+              <FormControl isInvalid={errors.estado ? true : false}>
+                <Input placeholder="Estado *" {...register("estado")} />
                 <FormErrorMessage>{errors?.estado?.message}</FormErrorMessage>
               </FormControl>
             </Flex>
-            <FormControl >
-              <Input placeholder="Responsável" {...register("responsavel")} />
+            <FormControl isInvalid={errors.responsavel ? true : false}>
+              <Input placeholder="Responsável *" {...register("responsavel")} />
               <FormErrorMessage>{errors?.responsavel?.message}</FormErrorMessage>
             </FormControl>
             <Flex gap={'48px'}>
-              <FormControl >
-                <Input placeholder="Telefone Responsável" {...register("telResponsavel")} />
+              <FormControl isInvalid={errors.telResponsavel ? true : false}>
+                <Input placeholder="Telefone Responsável *" {...register("telResponsavel")} />
                 <FormErrorMessage>{errors?.telResponsavel?.message}</FormErrorMessage>
               </FormControl>
-              <FormControl >
-                <Input placeholder="E-mail Responsável" {...register("emailResponsavel")} type="email" />
+              <FormControl isInvalid={errors.emailResponsavel ? true : false}>
+                <Input placeholder="E-mail Responsável *" {...register("emailResponsavel")} type="email" />
                 <FormErrorMessage>{errors?.emailResponsavel?.message}</FormErrorMessage>
               </FormControl>
             </Flex>
             <Flex gap={'48px'}>
-              <Button w={'100%'} variant={'outline'} colorScheme={'red'}>Limpar</Button>
-              <Button w={'100%'} colorScheme={'teal'} type="submit" disabled={!isValid}>Enviar</Button>
+              <Button w={'100%'} variant={'outline'} onClick={() => reset()} colorScheme={'red'} isLoading={isSubmitting}>Limpar</Button>
+              <Button w={'100%'} colorScheme={'teal'} type="submit" disabled={!isValid} isLoading={isSubmitting}>Enviar</Button>
             </Flex>
 
           </Flex>
