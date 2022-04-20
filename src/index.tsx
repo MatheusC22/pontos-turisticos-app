@@ -1,12 +1,15 @@
-import { ColorModeScript } from "@chakra-ui/react"
-import * as React from "react"
-import ReactDOM from "react-dom"
-import { App } from "./pages/App"
+import { ColorModeScript } from "@chakra-ui/react";
+import * as React from "react";
+import { createRoot } from 'react-dom/client';
+import { App } from "./pages/App";
 
-ReactDOM.render(
+const container = document.getElementById('root')!;
+
+const root = createRoot(container);
+
+root.render(
   <React.StrictMode>
     <ColorModeScript />
     <App />
-  </React.StrictMode>,
-  document.getElementById("root"),
+  </React.StrictMode>
 )

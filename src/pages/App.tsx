@@ -1,22 +1,19 @@
 import {
-  ChakraProvider,
-  Text,
-  Flex,
-  Heading,
-  FormControl,
-  Input,
-  Button,
-  FormErrorMessage,
+  Button, ChakraProvider, Flex, FormControl, FormErrorMessage, Heading, Input
 } from "@chakra-ui/react";
-import theme from "../styles/global";
-import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
+import axios from "axios";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import * as yup from "yup";
-import { useEffect } from "react";
+import theme from "../styles/global";
+import formatCep from "../utils/formatCep";
+import formatPhone from "../utils/formatPhone";
 
 type FormFields = {
   nome: string;
   descricao: string;
+  cep: string;
   cidade: string;
   estado: string;
   responsavel: string;
@@ -25,30 +22,56 @@ type FormFields = {
 }
 
 export const App = () => {
+  const [phone, setPhone] = useState('');
+  const [cep, setCep] = useState('');
 
   const requiredMessage = 'Campo obrigatório.';
   const schemaValidation = yup.object().shape({
     nome: yup.string().required(requiredMessage),
     descricao: yup.string().required(requiredMessage),
+    cep: yup.string().required(requiredMessage),
     cidade: yup.string().required(requiredMessage),
     estado: yup.string().required(requiredMessage),
     responsavel: yup.string().required(requiredMessage),
-    telResponsavel: yup.string().required(requiredMessage),
-    emailResponsavel: yup.string().required(requiredMessage)
+    telResponsavel: yup.string().required(requiredMessage).length(15, 'Telefone inválido.'),
+    emailResponsavel: yup.string().email('E-mail inválido.').required(requiredMessage)
   })
 
-  const { register, handleSubmit, reset, formState: { isValid, errors, isSubmitting } } = useForm<FormFields>({
+  const { register, handleSubmit, reset, setValue, setError, setFocus, resetField, formState: { isValid, errors, isSubmitting } } = useForm<FormFields>({
     resolver: yupResolver(schemaValidation),
     mode: "all",
   });
 
   async function onSubmit(data: FormFields) {
-    await new Promise((res) => {
-      setTimeout(() => {
-        res(true);
-      }, 1200)
-    });
     console.log(data);
+  }
+
+
+  function handlePhoneChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setPhone(formatPhone(event.target.value));
+  }
+
+  function handleCepChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setCep(formatCep(event.target.value));
+  }
+
+  async function handleCepBlur(event: React.FocusEvent<HTMLInputElement>) {
+    resetField("cidade");
+    resetField("estado");
+    try {
+      const cep = event.target.value.replace(/\D/g, '');
+      if (cep.length !== 8) {
+        setError("cep", { message: "CEP inválido." });
+      }
+      const { data } = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
+      if (data.erro) {
+        setError("cep", { message: "CEP inválido." });
+      }
+      setValue("cidade", data.localidade);
+      setValue("estado", data.uf);
+    } catch (error) {
+      setError("cep", { message: "CEP inválido." });
+    }
   }
 
   return (
@@ -65,13 +88,17 @@ export const App = () => {
               <Input placeholder="Descrição *" {...register("descricao")} />
               <FormErrorMessage>{errors?.descricao?.message}</FormErrorMessage>
             </FormControl>
-            <Flex gap={'48px'}>
-              <FormControl isInvalid={errors.cidade ? true : false}>
+            <Flex gap={'1.5rem'}>
+              <FormControl isInvalid={errors.cep ? true : false} w={'45%'} onBlur={handleCepBlur} onChange={handleCepChange}>
+                <Input placeholder="CEP *" {...register("cep")} value={cep} />
+                <FormErrorMessage>{errors?.cep?.message}</FormErrorMessage>
+              </FormControl>
+              <FormControl isInvalid={errors.cidade ? true : false} isDisabled>
                 <Input placeholder="Cidade *" {...register("cidade")} />
                 <FormErrorMessage>{errors?.cidade?.message}</FormErrorMessage>
               </FormControl>
-              <FormControl isInvalid={errors.estado ? true : false}>
-                <Input placeholder="Estado *" {...register("estado")} />
+              <FormControl isInvalid={errors.estado ? true : false} w={'30%'} isDisabled>
+                <Input placeholder="UF*" {...register("estado")} />
                 <FormErrorMessage>{errors?.estado?.message}</FormErrorMessage>
               </FormControl>
             </Flex>
@@ -81,7 +108,7 @@ export const App = () => {
             </FormControl>
             <Flex gap={'48px'}>
               <FormControl isInvalid={errors.telResponsavel ? true : false}>
-                <Input placeholder="Telefone Responsável *" {...register("telResponsavel")} />
+                <Input placeholder="Telefone Responsável *" {...register("telResponsavel")} maxLength={15} onChange={handlePhoneChange} value={phone} />
                 <FormErrorMessage>{errors?.telResponsavel?.message}</FormErrorMessage>
               </FormControl>
               <FormControl isInvalid={errors.emailResponsavel ? true : false}>
@@ -91,7 +118,7 @@ export const App = () => {
             </Flex>
             <Flex gap={'48px'}>
               <Button w={'100%'} variant={'outline'} onClick={() => reset()} colorScheme={'red'} isLoading={isSubmitting}>Limpar</Button>
-              <Button w={'100%'} colorScheme={'teal'} type="submit" disabled={!isValid} isLoading={isSubmitting}>Enviar</Button>
+              <Button w={'100%'} colorScheme={'primaryApp'} type="submit" disabled={!isValid} isLoading={isSubmitting}>Enviar</Button>
             </Flex>
 
           </Flex>
