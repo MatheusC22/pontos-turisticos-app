@@ -1,7 +1,18 @@
 import {
-  Button, ChakraProvider, Flex, FormControl, FormErrorMessage, Heading, Input
+  Alert,
+  AlertIcon,
+  Button,
+  ChakraProvider,
+  CloseButton,
+  Flex,
+  FormControl,
+  FormErrorMessage,
+  Heading,
+  Input,
+  Text,
+  useDisclosure
 } from "@chakra-ui/react";
-import { yupResolver } from '@hookform/resolvers/yup';
+import { yupResolver } from "@hookform/resolvers/yup";
 import axios from "axios";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,13 +30,14 @@ type FormFields = {
   responsavel: string;
   telResponsavel: string;
   emailResponsavel: string;
-}
+};
 
 export const App = () => {
-  const [phone, setPhone] = useState('');
-  const [cep, setCep] = useState('');
+  const [phone, setPhone] = useState("");
+  const [cep, setCep] = useState("");
+  const { isOpen, onClose, onOpen } = useDisclosure({ defaultIsOpen: false });
 
-  const requiredMessage = 'Campo obrigatório.';
+  const requiredMessage = "Campo obrigatório.";
   const schemaValidation = yup.object().shape({
     nome: yup.string().required(requiredMessage),
     descricao: yup.string().required(requiredMessage),
@@ -33,19 +45,37 @@ export const App = () => {
     cidade: yup.string().required(requiredMessage),
     estado: yup.string().required(requiredMessage),
     responsavel: yup.string().required(requiredMessage),
-    telResponsavel: yup.string().required(requiredMessage).length(15, 'Telefone inválido.'),
-    emailResponsavel: yup.string().email('E-mail inválido.').required(requiredMessage)
-  })
+    telResponsavel: yup.string().required(requiredMessage).length(15, "Telefone inválido."),
+    emailResponsavel: yup.string().email("E-mail inválido.").required(requiredMessage),
+  });
 
-  const { register, handleSubmit, reset, setValue, setError, setFocus, resetField, formState: { isValid, errors, isSubmitting } } = useForm<FormFields>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    setError,
+    resetField,
+    formState: { isValid, errors, isSubmitting },
+  } = useForm<FormFields>({
     resolver: yupResolver(schemaValidation),
     mode: "all",
   });
 
-  async function onSubmit(data: FormFields) {
-    console.log(data);
+  function resetForm() {
+    reset();
+    setPhone("");
+    setCep("");
   }
 
+  async function onSubmit(data: FormFields) {
+    if (isOpen) {
+      onClose();
+    }
+    console.log(data);
+    onOpen();
+    resetForm();
+  }
 
   function handlePhoneChange(event: React.ChangeEvent<HTMLInputElement>) {
     setPhone(formatPhone(event.target.value));
@@ -59,7 +89,7 @@ export const App = () => {
     resetField("cidade");
     resetField("estado");
     try {
-      const cep = event.target.value.replace(/\D/g, '');
+      const cep = event.target.value.replace(/\D/g, "");
       if (cep.length !== 8) {
         setError("cep", { message: "CEP inválido." });
       }
@@ -76,10 +106,29 @@ export const App = () => {
 
   return (
     <ChakraProvider theme={theme}>
-      <Flex w={'100%'} minH={'100vh'} align={'center'} justify={'center'} bg={'#fafafa'}>
-        <Flex w={'640px'} minH={'480px'} maxW={'80%'} my={'2rem'} bg={'white'} borderRadius={'20px'} boxShadow={'md'} align={'center'} py={'32px'} direction={'column'}>
-          <Heading fontWeight={'900'}>🗽 Pontos Turísticos</Heading>
-          <Flex as={'form'} direction={'column'} w={'100%'} px={'70px'} mt={'32px'} gap={'24px'} onSubmit={handleSubmit(onSubmit)}>
+      <Flex w={"100%"} minH={"100vh"} align={"center"} justify={"center"} bg={"#fafafa"} direction={"column"}>
+        <Flex
+          w={"640px"}
+          minH={"480px"}
+          maxW={"80%"}
+          my={"2rem"}
+          bg={"white"}
+          borderRadius={"20px"}
+          boxShadow={"md"}
+          align={"center"}
+          py={"32px"}
+          direction={"column"}
+        >
+          <Heading fontWeight={"900"}>🗽 Pontos Turísticos</Heading>
+          <Flex
+            as={"form"}
+            direction={"column"}
+            w={"100%"}
+            px={"70px"}
+            mt={"32px"}
+            gap={"24px"}
+            onSubmit={handleSubmit(onSubmit)}
+          >
             <FormControl isInvalid={errors.nome ? true : false}>
               <Input placeholder="Nome *" {...register("nome")} />
               <FormErrorMessage>{errors?.nome?.message}</FormErrorMessage>
@@ -88,8 +137,13 @@ export const App = () => {
               <Input placeholder="Descrição *" {...register("descricao")} />
               <FormErrorMessage>{errors?.descricao?.message}</FormErrorMessage>
             </FormControl>
-            <Flex gap={'1.5rem'}>
-              <FormControl isInvalid={errors.cep ? true : false} w={'45%'} onBlur={handleCepBlur} onChange={handleCepChange}>
+            <Flex gap={"1.5rem"}>
+              <FormControl
+                isInvalid={errors.cep ? true : false}
+                w={"45%"}
+                onBlur={handleCepBlur}
+                onChange={handleCepChange}
+              >
                 <Input placeholder="CEP *" {...register("cep")} value={cep} />
                 <FormErrorMessage>{errors?.cep?.message}</FormErrorMessage>
               </FormControl>
@@ -97,7 +151,7 @@ export const App = () => {
                 <Input placeholder="Cidade *" {...register("cidade")} />
                 <FormErrorMessage>{errors?.cidade?.message}</FormErrorMessage>
               </FormControl>
-              <FormControl isInvalid={errors.estado ? true : false} w={'30%'} isDisabled>
+              <FormControl isInvalid={errors.estado ? true : false} w={"30%"} isDisabled>
                 <Input placeholder="UF*" {...register("estado")} />
                 <FormErrorMessage>{errors?.estado?.message}</FormErrorMessage>
               </FormControl>
@@ -106,9 +160,15 @@ export const App = () => {
               <Input placeholder="Responsável *" {...register("responsavel")} />
               <FormErrorMessage>{errors?.responsavel?.message}</FormErrorMessage>
             </FormControl>
-            <Flex gap={'48px'}>
+            <Flex gap={"48px"}>
               <FormControl isInvalid={errors.telResponsavel ? true : false}>
-                <Input placeholder="Telefone Responsável *" {...register("telResponsavel")} maxLength={15} onChange={handlePhoneChange} value={phone} />
+                <Input
+                  placeholder="Telefone Responsável *"
+                  {...register("telResponsavel")}
+                  maxLength={15}
+                  onChange={handlePhoneChange}
+                  value={phone}
+                />
                 <FormErrorMessage>{errors?.telResponsavel?.message}</FormErrorMessage>
               </FormControl>
               <FormControl isInvalid={errors.emailResponsavel ? true : false}>
@@ -116,14 +176,34 @@ export const App = () => {
                 <FormErrorMessage>{errors?.emailResponsavel?.message}</FormErrorMessage>
               </FormControl>
             </Flex>
-            <Flex gap={'48px'}>
-              <Button w={'100%'} variant={'outline'} onClick={() => reset()} colorScheme={'red'} isLoading={isSubmitting}>Limpar</Button>
-              <Button w={'100%'} colorScheme={'primaryApp'} type="submit" disabled={!isValid} isLoading={isSubmitting}>Enviar</Button>
+            <Flex gap={"48px"}>
+              <Button
+                w={"100%"}
+                variant={"outline"}
+                onClick={() => resetForm()}
+                colorScheme={"red"}
+                isLoading={isSubmitting}
+              >
+                Limpar
+              </Button>
+              <Button w={"100%"} colorScheme={"primaryApp"} type="submit" disabled={!isValid} isLoading={isSubmitting}>
+                Enviar
+              </Button>
             </Flex>
-
           </Flex>
         </Flex>
+        {isOpen && (
+          <Flex w={"640px"} maxW={"80%"} id="success">
+            <Alert status="success" borderRadius={"20px"} boxShadow={"md"}>
+              <AlertIcon />
+              <Flex align={"center"} justify={"space-between"} grow={1}>
+                <Text>Dados cadastrados com sucesso!</Text>
+                <CloseButton alignSelf="flex-start" position="relative" onClick={onClose} />
+              </Flex>
+            </Alert>
+          </Flex>
+        )}
       </Flex>
     </ChakraProvider>
-  )
-}
+  );
+};
