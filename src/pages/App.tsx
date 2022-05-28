@@ -73,6 +73,7 @@ export const App = () => {
       onClose();
     }
     console.log(data);
+    return data;
     onOpen();
     resetForm();
   }
@@ -144,7 +145,7 @@ export const App = () => {
                 onBlur={handleCepBlur}
                 onChange={handleCepChange}
               >
-                <Input placeholder="CEP *" {...register("cep")} value={cep} />
+                <Input placeholder="CEP *" maxLength={10} {...register("cep")} value={cep} />
                 <FormErrorMessage>{errors?.cep?.message}</FormErrorMessage>
               </FormControl>
               <FormControl isInvalid={errors.cidade ? true : false} isDisabled>
